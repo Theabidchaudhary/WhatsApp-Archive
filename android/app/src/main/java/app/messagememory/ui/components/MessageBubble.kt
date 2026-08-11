@@ -138,7 +138,7 @@ private fun MediaPreview(message: MessageEntity, media: MediaEntity?, onOpenMedi
                         text = captureStatusLabel(message.captureStatus, isViewOnce = true),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = androidx.compose.ui.Modifier.padding(horizontal = 8.dp, top = 2.dp),
+                        modifier = androidx.compose.ui.Modifier.padding(start = 8.dp, top = 2.dp, end = 8.dp),
                     )
                 }
             else ->

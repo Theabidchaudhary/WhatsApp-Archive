@@ -63,7 +63,7 @@ object MessagingStyleReader {
     private fun fromMessagingStyle(messagesArray: Array<Parcelable>): List<RawMessage> {
         val messages = Notification.MessagingStyle.Message.getMessagesFromBundleArray(messagesArray)
         return messages.map { msg ->
-            val person = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) msg.person else null
+            val person = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) msg.senderPerson else null
             RawMessage(
                 senderName = person?.name?.toString() ?: "You",
                 senderKey = person?.key,

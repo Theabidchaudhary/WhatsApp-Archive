@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import app.messagememory.data.db.entity.ConversationEntity
 import app.messagememory.data.db.entity.MediaEntity
 import app.messagememory.data.db.entity.MessageEntity
-import net.zetetic.database.sqlcipher.SupportFactory
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 
 @Database(
     entities = [ConversationEntity::class, MessageEntity::class, MediaEntity::class],
@@ -27,7 +27,7 @@ abstract class AppDatabase : RoomDatabase() {
         fun build(context: Context): AppDatabase {
             val passphrase = DbPassphrase.getOrCreate(context)
             return Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, DB_NAME)
-                .openHelperFactory(SupportFactory(passphrase))
+                .openHelperFactory(SupportOpenHelperFactory(passphrase))
                 .build()
         }
     }

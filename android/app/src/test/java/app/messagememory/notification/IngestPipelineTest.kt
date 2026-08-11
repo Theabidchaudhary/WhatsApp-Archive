@@ -18,6 +18,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import java.io.File
 
 /**
@@ -28,6 +29,7 @@ import java.io.File
  * deduplicated rather than double-inserted.
  */
 @RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34]) // API 35 shadows aren't available in the pinned Robolectric version yet.
 class IngestPipelineTest {
 
     private lateinit var db: AppDatabase

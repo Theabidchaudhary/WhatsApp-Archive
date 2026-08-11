@@ -18,8 +18,10 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34]) // API 35 shadows aren't available in the pinned Robolectric version yet.
 class ArchiveRepositoryFilterTest {
 
     private lateinit var db: AppDatabase

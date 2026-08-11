@@ -9,7 +9,6 @@ import app.messagememory.data.db.entity.MediaType
 import app.messagememory.data.db.entity.MessageEntity
 import app.messagememory.data.db.entity.MessageType
 import app.messagememory.data.files.MediaStorage
-import app.messagememory.ui.search.ArchiveFilter
 import kotlinx.coroutines.flow.Flow
 
 /** UI-facing façade over the DAOs. Every read filters live at query time by `expiresAt > now` where relevant. */
@@ -97,6 +96,7 @@ class ArchiveRepository(
     suspend fun clearMediaKeepMessages() {
         mediaStorage.listAllFiles().forEach { mediaStorage.deleteOrphan(it) }
         mediaDao.deleteAll()
+        messageDao.clearMediaReferences()
     }
 }
 

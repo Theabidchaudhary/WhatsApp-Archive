@@ -92,21 +92,21 @@ class IngestPipeline(
         val capturedAt = now
         val expiresAt = RetentionPolicy.expiresAt(capturedAt)
 
-        var mediaId: Long? = null
-        var mediaCaptureStatus: CaptureStatus? = null
-
-        if (message.mediaCandidate != null) {
-            mediaId = captureMedia(conversation.id, message, capturedAt, expiresAt)
-            mediaCaptureStatus = mediaId?.let { mediaDao.getById(it)?.captureStatus }
-        }
-
-        val overallStatus = IngestLogic.resolveMessageCaptureStatus(
+        // The message row must exist before any media row, since MediaEntity
+        // has a NOT-NULL foreign key to messages.id and Room enforces
+        // foreign-key constraints (PRAGMA foreign_keys=ON) by default — a
+        // media row can never point at a message that doesn't exist yet.
+        // We insert a provisional row first (best-effort status ignoring
+        // media, since media capture hasn't run yet), then update it once
+        // the real outcome is known. This still honors "a failed media
+        // capture doesn't prevent the message from being archived" — the
+        // message row is durable from the very first insert.
+        val provisionalStatus = IngestLogic.resolveMessageCaptureStatus(
             hasText = message.text != null,
             hasMediaCandidate = message.mediaCandidate != null,
-            mediaCaptureStatus = mediaCaptureStatus,
+            mediaCaptureStatus = null,
         )
-
-        val entity = MessageEntity(
+        val provisionalEntity = MessageEntity(
             conversationId = conversation.id,
             dedupKey = dedupKey,
             senderName = message.senderName,
@@ -120,21 +120,31 @@ class IngestPipeline(
             expiresAt = expiresAt,
             originalNotificationKey = parsed.notificationKey,
             wasSeenDeletedInWhatsApp = false,
-            hasMedia = mediaId != null,
-            mediaId = mediaId,
+            hasMedia = message.mediaCandidate != null,
+            mediaId = null,
             quotedText = null,
             quotedSender = null,
-            captureStatus = overallStatus,
+            captureStatus = provisionalStatus,
         )
-        val insertedId = messageDao.insert(entity)
-        if (insertedId != -1L && mediaId != null) {
-            mediaDao.getById(mediaId)?.let { mediaDao.update(it.copy(messageId = insertedId)) }
-        }
-        return insertedId != -1L
+        val insertedId = messageDao.insert(provisionalEntity)
+        if (insertedId == -1L) return false
+
+        if (message.mediaCandidate == null) return true
+
+        val mediaId = captureMedia(conversation.id, insertedId, message, capturedAt, expiresAt)
+        val mediaCaptureStatus = mediaId?.let { mediaDao.getById(it)?.captureStatus }
+        val overallStatus = IngestLogic.resolveMessageCaptureStatus(
+            hasText = message.text != null,
+            hasMediaCandidate = true,
+            mediaCaptureStatus = mediaCaptureStatus,
+        )
+        messageDao.update(provisionalEntity.copy(id = insertedId, mediaId = mediaId, captureStatus = overallStatus))
+        return true
     }
 
     private suspend fun captureMedia(
         conversationId: Long,
+        messageId: Long,
         message: ParsedMessage,
         capturedAt: Long,
         expiresAt: Long,
@@ -145,7 +155,7 @@ class IngestPipeline(
 
         if (probe.status != CaptureStatus.SUCCESS) {
             val entity = MediaEntity(
-                messageId = 0,
+                messageId = messageId,
                 conversationId = conversationId,
                 type = mediaType,
                 localUri = null,
@@ -173,7 +183,7 @@ class IngestPipeline(
             is MediaStorage.PersistResult.Success -> {
                 val existingDuplicate = mediaDao.findDuplicate(persistResult.contentHash, conversationId, capturedAt)
                 val entity = MediaEntity(
-                    messageId = 0,
+                    messageId = messageId,
                     conversationId = conversationId,
                     type = mediaType,
                     localUri = existingDuplicate?.localUri ?: persistResult.localUri,
@@ -195,7 +205,7 @@ class IngestPipeline(
             }
             is MediaStorage.PersistResult.Failure -> {
                 val entity = MediaEntity(
-                    messageId = 0,
+                    messageId = messageId,
                     conversationId = conversationId,
                     type = mediaType,
                     localUri = null,

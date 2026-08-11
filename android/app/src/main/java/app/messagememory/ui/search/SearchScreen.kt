@@ -29,6 +29,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.messagememory.data.db.entity.MessageEntity
+import app.messagememory.data.repo.ArchiveFilter
 import app.messagememory.di.AppContainer
 import app.messagememory.ui.components.captureStatusLabel
 import app.messagememory.util.Formatters

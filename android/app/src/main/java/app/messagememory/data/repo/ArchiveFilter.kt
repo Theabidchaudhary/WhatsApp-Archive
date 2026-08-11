@@ -1,4 +1,4 @@
-package app.messagememory.ui.search
+package app.messagememory.data.repo
 
 enum class ArchiveFilter(val label: String) {
     ALL("All"),

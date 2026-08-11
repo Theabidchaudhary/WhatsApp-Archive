@@ -13,7 +13,6 @@ import app.messagememory.data.db.entity.CaptureStatus
  * Renders exactly the label the capture pipeline recorded — never a
  * friendlier-sounding guess. See ARCHITECTURE.md §8.
  */
-@Composable
 fun captureStatusLabel(status: CaptureStatus, isViewOnce: Boolean = false): String = when {
     isViewOnce && status != CaptureStatus.SUCCESS ->
         "View Once content detected, but WhatsApp did not make the media available to this app."

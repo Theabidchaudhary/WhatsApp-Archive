@@ -3,6 +3,7 @@ package app.messagememory.ui.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.messagememory.data.db.entity.MessageEntity
+import app.messagememory.data.repo.ArchiveFilter
 import app.messagememory.data.repo.ArchiveRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

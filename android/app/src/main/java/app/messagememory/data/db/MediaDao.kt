@@ -41,9 +41,6 @@ interface MediaDao {
     @Query("DELETE FROM media")
     suspend fun deleteAll()
 
-    @Query("DELETE FROM media WHERE type != :keepType")
-    suspend fun deleteAllExceptType(keepType: MediaType)
-
     @Query(
         "SELECT type, COUNT(*) as count FROM media WHERE expiresAt > :now GROUP BY type",
     )

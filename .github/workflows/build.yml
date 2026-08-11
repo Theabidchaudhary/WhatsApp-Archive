@@ -10,6 +10,9 @@ on:
       - ".github/workflows/build.yml"
   workflow_dispatch: {}
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -50,6 +53,26 @@ jobs:
           name: message-memory-debug-apk
           path: android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+
+      # Also publishes the APK to a dedicated, force-pushed git branch (one
+      # commit, overwritten each run) so it's fetchable over plain git —
+      # some environments consuming this repo can't reach the Actions
+      # artifact storage host directly.
+      - name: Publish APK to apk-builds branch
+        run: |
+          set -e
+          APK_DIR="$GITHUB_WORKSPACE/android/app/build/outputs/apk/debug"
+          APK_FILE=$(ls "$APK_DIR"/*.apk | head -n1)
+          PUBLISH_DIR=$(mktemp -d)
+          cp "$APK_FILE" "$PUBLISH_DIR/"
+          cd "$PUBLISH_DIR"
+          git init -q -b apk-builds
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git add "$(basename "$APK_FILE")"
+          git commit -q -m "APK build from ${{ github.sha }}"
+          git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git push -f origin apk-builds
 
       # Runs after the APK is already built/uploaded so a test failure never
       # blocks getting the APK; still fails the workflow overall so test

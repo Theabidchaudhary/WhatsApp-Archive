@@ -7,7 +7,9 @@ import app.messagememory.data.db.entity.ConversationEntity
 import app.messagememory.data.db.entity.MediaEntity
 import app.messagememory.data.db.entity.MediaType
 import app.messagememory.data.db.entity.MessageEntity
+import app.messagememory.data.db.entity.MessageType
 import app.messagememory.data.files.MediaStorage
+import app.messagememory.ui.search.ArchiveFilter
 import kotlinx.coroutines.flow.Flow
 
 /** UI-facing façade over the DAOs. Every read filters live at query time by `expiresAt > now` where relevant. */
@@ -25,11 +27,36 @@ class ArchiveRepository(
     fun observeMessages(conversationId: Long): Flow<List<MessageEntity>> =
         messageDao.observeForConversation(conversationId)
 
+    fun observeMessage(messageId: Long): Flow<MessageEntity?> = messageDao.observeById(messageId)
+
     fun observeMedia(messageId: Long): Flow<MediaEntity?> = mediaDao.observeForMessage(messageId)
 
     suspend fun search(query: String): List<MessageEntity> {
         if (query.isBlank()) return emptyList()
         return messageDao.search(query.trim(), clock())
+    }
+
+    /**
+     * Local-only browse across the currently retained 24h archive
+     * (brief §16/§17) — query text plus a type filter. Bounded dataset size
+     * (24h of one user's WhatsApp traffic) makes an in-memory filter pass
+     * simpler and just as fast as a set of bespoke joined queries.
+     */
+    suspend fun browse(query: String, filter: ArchiveFilter): List<MessageEntity> {
+        val now = clock()
+        val base = if (query.isBlank()) messageDao.allActive(now) else messageDao.search(query.trim(), now)
+        return when (filter) {
+            ArchiveFilter.ALL -> base
+            ArchiveFilter.MESSAGES -> base.filter { it.messageType == MessageType.TEXT }
+            ArchiveFilter.IMAGES -> base.filter { it.messageType == MessageType.IMAGE || it.messageType == MessageType.VIEW_ONCE_IMAGE }
+            ArchiveFilter.VIDEOS -> base.filter { it.messageType == MessageType.VIDEO || it.messageType == MessageType.VIEW_ONCE_VIDEO }
+            ArchiveFilter.AUDIO -> base.filter { it.messageType == MessageType.AUDIO || it.messageType == MessageType.VOICE_NOTE }
+            ArchiveFilter.DOCUMENTS -> base.filter { it.messageType == MessageType.DOCUMENT }
+            ArchiveFilter.VIEW_ONCE -> base.filter { it.messageType == MessageType.VIEW_ONCE_IMAGE || it.messageType == MessageType.VIEW_ONCE_VIDEO }
+            ArchiveFilter.SAVED -> base.filter { message ->
+                message.mediaId?.let { mediaDao.getById(it)?.manuallySaved } ?: false
+            }
+        }
     }
 
     suspend fun markMediaOpened(media: MediaEntity) {

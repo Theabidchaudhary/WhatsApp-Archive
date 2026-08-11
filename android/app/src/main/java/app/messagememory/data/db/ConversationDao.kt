@@ -35,7 +35,9 @@ interface ConversationDao {
         "UPDATE conversations SET messageCount = " +
             "(SELECT COUNT(*) FROM messages WHERE messages.conversationId = conversations.id), " +
             "mediaCount = (SELECT COUNT(*) FROM media WHERE media.conversationId = conversations.id), " +
-            "lastMessageTimestamp = COALESCE((SELECT MAX(timestamp) FROM messages WHERE messages.conversationId = conversations.id), lastMessageTimestamp) " +
+            "lastMessageTimestamp = COALESCE((SELECT MAX(timestamp) FROM messages WHERE messages.conversationId = conversations.id), lastMessageTimestamp), " +
+            "lastMessagePreview = (SELECT CASE WHEN text IS NOT NULL THEN text ELSE ('[' || messageType || ']') END " +
+            "FROM messages WHERE messages.conversationId = conversations.id ORDER BY timestamp DESC LIMIT 1) " +
             "WHERE id = :id",
     )
     suspend fun recomputeAggregates(id: Long)

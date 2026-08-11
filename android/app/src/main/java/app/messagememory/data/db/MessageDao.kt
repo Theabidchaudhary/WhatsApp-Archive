@@ -22,6 +22,9 @@ interface MessageDao {
     @Query("SELECT * FROM messages WHERE conversationId = :conversationId ORDER BY timestamp ASC")
     fun observeForConversation(conversationId: Long): Flow<List<MessageEntity>>
 
+    @Query("SELECT * FROM messages WHERE id = :id LIMIT 1")
+    fun observeById(id: Long): Flow<MessageEntity?>
+
     @Query("SELECT * FROM messages WHERE expiresAt <= :now")
     suspend fun expired(now: Long): List<MessageEntity>
 
@@ -40,6 +43,9 @@ interface MessageDao {
 
     @Query("SELECT COUNT(*) FROM messages WHERE expiresAt > :now")
     suspend fun activeCount(now: Long): Int
+
+    @Query("SELECT * FROM messages WHERE expiresAt > :now ORDER BY timestamp DESC")
+    suspend fun allActive(now: Long): List<MessageEntity>
 
     @Query("SELECT MIN(capturedAt) FROM messages WHERE expiresAt > :now")
     suspend fun oldestActiveCapturedAt(now: Long): Long?

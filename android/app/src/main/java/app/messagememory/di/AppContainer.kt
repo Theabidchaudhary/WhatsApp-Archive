@@ -2,6 +2,7 @@ package app.messagememory.di
 
 import android.content.Context
 import app.messagememory.data.db.AppDatabase
+import app.messagememory.data.export.SaveToDeviceExporter
 import app.messagememory.data.files.MediaStorage
 import app.messagememory.data.repo.ArchiveRepository
 import app.messagememory.diagnostics.DiagnosticsRepository
@@ -18,6 +19,7 @@ class AppContainer(context: Context) {
 
     val database: AppDatabase by lazy { AppDatabase.build(appContext) }
     val mediaStorage: MediaStorage by lazy { MediaStorage(appContext) }
+    val saveToDeviceExporter: SaveToDeviceExporter by lazy { SaveToDeviceExporter(appContext) }
     val diagnosticsRepository: DiagnosticsRepository by lazy { DiagnosticsRepository(appContext) }
 
     val archiveRepository: ArchiveRepository by lazy {

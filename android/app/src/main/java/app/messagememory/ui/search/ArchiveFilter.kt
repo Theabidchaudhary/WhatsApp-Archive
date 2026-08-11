@@ -1,0 +1,12 @@
+package app.messagememory.ui.search
+
+enum class ArchiveFilter(val label: String) {
+    ALL("All"),
+    MESSAGES("Messages"),
+    IMAGES("Images"),
+    VIDEOS("Videos"),
+    AUDIO("Audio"),
+    DOCUMENTS("Documents"),
+    VIEW_ONCE("View Once"),
+    SAVED("Saved"),
+}

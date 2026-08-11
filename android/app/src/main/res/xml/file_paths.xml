@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Only the archive media tree is ever exposed via FileProvider, and
+         only for the lifetime of an explicit user-initiated Share action. -->
+    <files-path name="archive_media" path="archive/media/" />
+</paths>

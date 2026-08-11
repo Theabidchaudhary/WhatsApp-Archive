@@ -22,4 +22,6 @@ data class ConversationEntity(
     val unreadCount: Int,
     val messageCount: Int,
     val mediaCount: Int,
+    /** Denormalized for fast dashboard rendering — recomputed alongside the other aggregates. */
+    val lastMessagePreview: String? = null,
 )

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      Deliberately minimal permission set (see TECHNICAL_LIMITATIONS.md §10):
+      - No INTERNET: the app has no network code at all.
+      - No broad storage permission: archive storage is app-private;
+        "Save to device" uses MediaStore/SAF, which need no manifest
+        permission on API 29+ (our minSdk is 26, but this app never targets
+        pre-scoped-storage bulk file access).
+    -->
+
+    <application
+        android:name=".MessageMemoryApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.MessageMemory"
+        android:usesCleartextTraffic="false"
+        android:enableOnBackInvokedCallback="true"
+        android:hardwareAccelerated="true"
+        tools:targetApi="34">
+
+        <!-- Sensitive local content: never let the system back this app up. -->
+        <meta-data
+            android:name="android.max_aspect"
+            android:value="2.4" />
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.MessageMemory">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+          NotificationListenerService: the entire capture mechanism. Requires
+          the user to explicitly grant Notification Access in system
+          settings (Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS); Android
+          enforces BIND_NOTIFICATION_LISTENER_SERVICE so no other app/process
+          can bind to it. See TECHNICAL_LIMITATIONS.md §1, §9.
+        -->
+        <service
+            android:name=".notification.WhatsAppListenerService"
+            android:exported="true"
+            android:label="@string/notification_listener_label"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>
